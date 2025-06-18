@@ -2199,7 +2199,7 @@ void
 incnmaster(const Arg *arg)
 {
 	Workspace *ws = selws;
-	ws->nmaster = MAX(MIN(ws->nmaster,numtiled(ws)) + arg->i, 0);
+	ws->nmaster = MAX(MIN(ws->nmaster + arg->i,numtiled(ws) - 1), 0);
 	arrange(ws);
 }
 
