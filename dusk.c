@@ -581,7 +581,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 	[GenericEvent] = genericevent,
 	#endif
 	[KeyPress] = keypress,
-	[KeyRelease] = keyrelease,
+	[KeyRelease] = keypress,
 	[MappingNotify] = mappingnotify,
 	[MapRequest] = maprequest,
 	[MotionNotify] = motionnotify,
@@ -2266,8 +2266,8 @@ keypress(XEvent *e)
 	#endif // USE_KEYCODES
 	ignore_marked = 1;
 
-	// if (ev->type == KeyRelease)
-	// 	keyrelease(e);
+	if (ev->type == KeyRelease)
+		keyrelease(e);
 
 	togglewsmask();
 }
