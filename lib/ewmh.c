@@ -288,6 +288,33 @@ restorewindowfloatposition(Client *c, Monitor *m)
 	return 1;
 }
 
+/* Sets WM_STATE, which is a basic window manager hint part of the older ICCCM specification */
+void
+setclientstate(Client *c, long state)
+{
+	long data[] = { state, None };
+
+	XChangeProperty(dpy, c->win, wmatom[WMState], wmatom[WMState], 32,
+		PropModeReplace, (unsigned char *)data, 2);
+
+	setclientnetstate(c, state == NormalState ? 0 : NetWMHidden);
+}
+
+/* Sets _NET_WM_STATE, which is an extended window manager hint part of the EWMH specification */
+void
+setclientnetstate(Client *c, int state)
+{
+	if (!state) {
+		/* Clear property if we have no state */
+		XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
+			PropModeReplace, (unsigned char*)0, 0);
+		return;
+	}
+
+	XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
+		PropModeReplace, (unsigned char*)&netatom[state], 1);
+}
+
 void
 setdesktopnames(void)
 {
@@ -376,7 +403,7 @@ getclientflags(Client *c)
 	if (flags1 || flags2) {
 		c->flags = flags1 | (flags2 << 32);
 		/* Remove flags that should not survive a restart */
-		removeflag(c, Marked|Centered|SwitchWorkspace|EnableWorkspace|RevertWorkspace);
+		removeflag(c, Marked|Centered|SwitchWorkspace|EnableWorkspace|RevertWorkspace|Locked);
 	}
 }
 

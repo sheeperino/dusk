@@ -41,6 +41,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
+#include <inttypes.h>
 
 #include "drw.h"
 #include "util.h"
@@ -499,7 +500,6 @@ static void run(void);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void setbackground(void);
-static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen, int setfakefullscreen);
 static void setlayout(const Arg *arg);
@@ -684,7 +684,7 @@ applyrules(Client *c)
 					"    instance:  %s\n"
 					"    title:     %s\n"
 					"    wintype:   %s\n"
-					"    flags:     %lu\n"
+					"    flags:     %" PRIu64 "\n"
 					"    floatpos:  %s\n"
 					"    workspace: %s\n"
 					"    label:     %s\n",
@@ -3193,15 +3193,6 @@ setbackground(void)
 	XClearWindow(dpy, root);
 }
 
-void
-setclientstate(Client *c, long state)
-{
-	long data[] = { state, None };
-
-	XChangeProperty(dpy, c->win, wmatom[WMState], wmatom[WMState], 32,
-		PropModeReplace, (unsigned char *)data, 2);
-}
-
 int
 sendevent(Window w, Atom proto, int mask, long d0, long d1, long d2, long d3, long d4)
 {
@@ -3281,12 +3272,7 @@ setfullscreen(Client *c, int fullscreen, int restorefakefullscreen)
 	}
 
 	if (fullscreen != ISFULLSCREEN(c)) { // only send property change if necessary
-		if (fullscreen)
-			XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
-				PropModeReplace, (unsigned char*)&netatom[NetWMFullscreen], 1);
-		else
-			XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
-				PropModeReplace, (unsigned char*)0, 0);
+		setclientnetstate(c, fullscreen ? NetWMFullscreen : 0);
 	}
 
 	setflag(c, FullScreen, fullscreen);
@@ -3791,7 +3777,6 @@ unmanage(Client *c, int destroyed)
 {
 	Client *s;
 	Workspace *ws, *revertws;
-	XWindowChanges wc;
 
 	if (SEMISCRATCHPAD(c))
 		c = unmanagesemiscratchpad(c);
@@ -3824,11 +3809,9 @@ unmanage(Client *c, int destroyed)
 	freeicon(c);
 
 	if (!destroyed) {
-		wc.border_width = c->oldbw;
 		XGrabServer(dpy); /* avoid race conditions */
 		XSetErrorHandler(xerrordummy);
 		XSelectInput(dpy, c->win, NoEventMask);
-		XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* restore border */
 		XUngrabButton(dpy, AnyButton, AnyModifier, c->win);
 		XSync(dpy, False);
 		XSetErrorHandler(xerror);
@@ -4273,7 +4256,7 @@ main(int argc, char *argv[])
 	setup();
 	autostart_exec();
 #ifdef __OpenBSD__
-	if (pledge("stdio rpath proc exec ps", NULL) == -1)
+	if (pledge("stdio rpath proc exec ps unix inet", NULL) == -1)
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
