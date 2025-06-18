@@ -3,8 +3,27 @@ placedir(const Arg *arg)
 {
 	Client *s = selws->sel, *f = NULL, *c, *next, *fprior, *sprior;
 
-	if (!s || ISFLOATING(s))
+	if (!s)
 		return;
+
+	// let's move some windows around :)
+	if (ISFLOATING(s)) {
+		switch (arg->i) {
+		case 0: // left
+			floatpos(&(const Arg){.v = "-24x 0y"});
+			break;
+		case 1: // right
+			floatpos(&(const Arg){.v = "24x 0y"});
+			break;
+		case 2: // up
+			floatpos(&(const Arg){.v = "0x -24y"});
+			break;
+		case 3: // down
+			floatpos(&(const Arg){.v = "0x 24y"});
+			break;
+		}
+		return;
+	}
 
 	unsigned int score = -1;
 	unsigned int client_score;
