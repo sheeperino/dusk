@@ -4,7 +4,7 @@ floatpos(const Arg *arg)
 	Workspace *ws = selws;
 	Client *c = ws->sel;
 
-	if (!c)
+	if (!c || !ISFLOATING(c))
 		return;
 
 	setfloatpos(c, (char *)arg->v, 1, 1);
