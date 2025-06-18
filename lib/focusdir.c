@@ -24,6 +24,26 @@ focusdir(const Arg *arg)
 		if (!ISVISIBLE(c) || (!ISTILED(c) != !istiled))
 			continue;
 
+		// Use focusstack instead, if in monocle layout (since you cant see the direction)
+		if (selws->ltaxis[MASTER] == MONOCLE) {
+			switch (arg->i) {
+			case 0: // left
+				focusstack(&(const Arg){.i = -1});
+				break;
+			case 1: // right
+				focusstack(&(const Arg){.i = +1});
+				break;
+			case 2: // up 
+				focusstack(&(const Arg){.i = -1});
+				break;
+			default:
+			case 3: // down
+				focusstack(&(const Arg){.i = +1});
+				break;
+			}
+			return;
+		}
+
 		switch (arg->i) {
 		case 0: // left
 			dist = s->x - c->x - c->w;
