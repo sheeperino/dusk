@@ -536,7 +536,7 @@ static void zoom(const Arg *arg);
 #include "lib/include.h"
 
 /* variables */
-static const char broken[] = "fubar";
+static const char broken[] = "meow im a stray client";
 static char rawstatustext[NUM_STATUSES][STATUS_BUFFER];
 static const char* env_home;
 static int env_homelen;
