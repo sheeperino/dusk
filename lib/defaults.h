@@ -1,7 +1,7 @@
 /* This file sets some default macro values if not specified via config. */
 
 #ifndef GLOBAL_HZ
-#define GLOBAL_HZ 60
+#define GLOBAL_HZ 180
 #endif
 
 #ifndef DRAGCFACT_HZ
