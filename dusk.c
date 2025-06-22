@@ -2092,6 +2092,8 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	if (name.encoding == XA_STRING) {
 		strlcpy(text, (char *)name.value, size);
 	} else if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success && n > 0 && *list) {
+		if (lowercase_client_titles)
+			for (char *p = *list; *p; ++p) *p = tolower(*p);
 		strlcpy(text, *list, size);
 		XFreeStringList(list);
 	}

@@ -62,6 +62,7 @@ static char *custom_2d_indicator_6 = "^c#F0A523^^r6,2,1,-4^^r-6,2,1,-4^"; // ora
 static char *occupied_workspace_label_format = "%s: %s";     /* format of a workspace label */
 static char *vacant_workspace_label_format = "%s";           /* format of an empty / vacant workspace */
 static int lowercase_workspace_labels = 1;                   /* whether to change workspace labels to lower case */
+static int lowercase_client_titles = 0;                   /* whether to change client titles to lower case */
 static int prefer_window_icons_over_workspace_labels = 0;    /* whether to use window icons instead of labels if present */
 static int swap_occupied_workspace_label_format_strings = 0; /* 0 gives "icon: label", 1 gives "label: icon" */
 
