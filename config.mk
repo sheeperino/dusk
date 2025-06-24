@@ -22,8 +22,8 @@ PKG_CONFIG = pkg-config
 USE_KEYCODES = 0
 
 # Optional dependency on Xinerama for multi-monitor support
-XINERAMALIBS  = `$(PKG_CONFIG) --libs xinerama`
-XINERAMAFLAGS = -DXINERAMA
+# XINERAMALIBS  = `$(PKG_CONFIG) --libs xinerama`
+# XINERAMAFLAGS = -DXINERAMA
 
 # freetype
 # FREETYPELIBS = -lfontconfig -lXft
@@ -58,7 +58,7 @@ LIBS = ${XINERAMALIBS} ${FREETYPELIBS} ${XRENDER} ${XCBLIBS} ${KVMLIB} ${YAJLLIB
 # Optional compiler optimisations may create smaller binaries and
 # faster code, but increases compile time.
 # See https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
-#OPTIMISATIONS = -march=native -flto=auto -O3
+OPTIMISATIONS = -march=native -flto=auto -O3
 
 # flags
 CPPFLAGS = -D_DEFAULT_SOURCE ${HAVE_LIBXI} ${HAVE_FRIBIDI} ${HAVE_DBUS} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200809L -DUSE_KEYCODES=${USE_KEYCODES} -DVERSION=\"${VERSION}\" ${XINERAMAFLAGS} ${HOSTFLAGS}
