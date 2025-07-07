@@ -2285,8 +2285,6 @@ keypress(XEvent *e)
 
 	if (ev->type == KeyRelease)
 		keyrelease(e);
-
-	togglewsmask();
 }
 
 int
@@ -2301,6 +2299,7 @@ keyrelease(XEvent *e)
 	if (!combo)
 		return;
 
+	togglewsmask();
 	combo = 0;
 }
 
