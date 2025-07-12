@@ -46,6 +46,7 @@ static int indicators[IndicatorLast] = {
 	[IndicatorFakeFullScreenActive] = INDICATOR_PLUS_AND_LARGER_SQUARE,
 	[IndicatorFloatFakeFullScreen] = INDICATOR_PLUS,
 	[IndicatorFloatFakeFullScreenActive] = INDICATOR_PLUS_AND_LARGER_SQUARE,
+	[IndicatorScratch] = INDICATOR_NONE,
 	[IndicatorTiled] = INDICATOR_NONE,
 	[IndicatorFloating] = INDICATOR_TOP_LEFT_LARGER_SQUARE,
 };

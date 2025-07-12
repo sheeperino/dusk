@@ -11,6 +11,7 @@ enum {
 	IndicatorFakeFullScreenActive,
 	IndicatorFloatFakeFullScreen,
 	IndicatorFloatFakeFullScreenActive,
+	IndicatorScratch,
 	IndicatorTiled,
 	IndicatorFloating,
 	IndicatorSelected,
