@@ -1,5 +1,3 @@
-static Workspace *stickyws;
-
 void
 attachws(Workspace *ws, Workspace *target)
 {
@@ -110,8 +108,8 @@ createworkspaces(void)
 {
 	int i;
 
-	for (i = 0; i < LENGTH(wsrules); i++)
-		attachws(createworkspace(i, &wsrules[i]), NULL);
+	for (i = 0; i < num_wsrules; i++)
+		attachws(createworkspace(i, &_cfg_wsrules[i]), NULL);
 
 	num_workspaces = i;
 
@@ -123,20 +121,20 @@ Workspace *
 createworkspace(int num, const WorkspaceRule *r)
 {
 	Workspace *ws;
-	int num_layouts = LENGTH(layouts) - 1;
-
+	int n = num_layouts - 1;
 	ws = ecalloc(1, sizeof(Workspace));
+	ws->ltsymbol = NULL;
 	ws->num = num;
 	ws->pinned = 0;
 	ws->wfact = 1.0;
 	ws->rule_pinned = r->pinned;
 	ws->rule_monitor = r->monitor;
+	ws->name = r->name;
 
-	strlcpy(ws->name, r->name, sizeof ws->name);
+	ws->layout = (r->layout == -1 ? &_cfg_layouts[0] : &_cfg_layouts[MIN(r->layout, n)]);
+	freestrdup(&ws->ltsymbol, ws->layout->symbol);
+	ws->prevlayout = &_cfg_layouts[1 % n];
 
-	ws->layout = (r->layout == -1 ? &layouts[0] : &layouts[MIN(r->layout, num_layouts)]);
-	strlcpy(ws->ltsymbol, ws->layout->symbol, sizeof ws->ltsymbol);
-	ws->prevlayout = &layouts[1 % num_layouts];
 	ws->mfact = (r->mfact == -1 ? mfact : r->mfact);
 	ws->nmaster = (r->nmaster == -1 ? nmaster : r->nmaster);
 	ws->nstack = (r->nstack == -1 ? nstack : r->nstack);
@@ -164,8 +162,8 @@ createstickyworkspace(void)
 	Workspace *ws;
 
 	/* Find the floating layout for the sticky rule */
-	for (i = 0; i < LENGTH(layouts); i++)
-		if ((&layouts[i])->arrange == NULL)
+	for (i = 0; i < num_layouts; i++)
+		if ((&_cfg_layouts[i])->arrange == NULL)
 			break;
 
 	const WorkspaceRule stickywsrule = { .name = "Sticky", .layout = i };
@@ -1109,6 +1107,11 @@ distributeworkspaces(void)
 		if (mr) {
 			assignworkspacetomonitor(ws, mr);
 			ws->pinned = ws->rule_pinned;
+			continue;
+		}
+
+		if (workspaces_per_mon && ws->rule_pinned) {
+			stash_workspace(ws);
 			continue;
 		}
 

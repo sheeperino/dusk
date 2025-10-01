@@ -1,6 +1,3 @@
-/* Compile-time check to make sure that the number of bar rules do not exceed the limit */
-struct NumBarRules { char TooManyBarRules__Increase_BARRULES_macro_to_fix_this[LENGTH(barrules) > BARRULES ? -1 : 1]; };
-
 void
 barhover(XEvent *e, Bar *bar)
 {
@@ -13,8 +10,8 @@ barhover(XEvent *e, Bar *bar)
 	BarArg barg = { 0, 0, 0, 0 };
 	int r;
 
-	for (r = 0; r < LENGTH(barrules); r++) {
-		br = &barrules[r];
+	for (r = 0; r < num_barrules; r++) {
+		br = &_cfg_barrules[r];
 		if (br->bar != bar->idx || (br->monitor == 'A' && m != selmon) || br->hoverfunc == NULL)
 			continue;
 		if (br->monitor != 'A' && br->monitor != -1 && br->monitor != bar->mon->num)
@@ -54,8 +51,8 @@ barpress(XButtonPressedEvent *ev, Monitor *m, Arg *arg, int *click)
 
 	for (bar = selmon->bar; bar; bar = bar->next) {
 		if (ev->window == bar->win) {
-			for (r = 0; r < LENGTH(barrules); r++) {
-				br = &barrules[r];
+			for (r = 0; r < num_barrules; r++) {
+				br = &_cfg_barrules[r];
 				if (br->bar != bar->idx || (br->monitor == 'A' && m != selmon) || br->clickfunc == NULL || !bar->s[r])
 					continue;
 				if (br->monitor != 'A' && br->monitor != -1 && br->monitor != bar->mon->num)
@@ -95,8 +92,8 @@ createbars(Monitor *m)
 {
 	const BarDef *def;
 
-	for (int i = 0; i < LENGTH(bars); i++) {
-		def = &bars[i];
+	for (int i = 0; i < num_bars; i++) {
+		def = &_cfg_bars[i];
 		if (def->monitor == m->num)
 			createbar(def, m);
 	}
@@ -118,6 +115,11 @@ createbar(const BarDef *def, Monitor *m)
 	bar->showbar = 1;
 	bar->external = 0;
 	bar->borderpx = enabled(BarBorder) ? borderpx : 0;
+	bar->s = ecalloc(num_barrules, sizeof(int));
+	bar->p = ecalloc(num_barrules, sizeof(int));
+	bar->sscheme = ecalloc(num_barrules, sizeof(int));
+	bar->escheme = ecalloc(num_barrules, sizeof(int));
+
 	m->bar = bar;
 }
 
@@ -179,8 +181,8 @@ drawbarwin(Bar *bar)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, lx, bar->borderpx, lw, bar->bh - 2 * bar->borderpx, 1, 1);
 
-	for (r = 0; r < LENGTH(barrules); r++) {
-		br = &barrules[r];
+	for (r = 0; r < num_barrules; r++) {
+		br = &_cfg_barrules[r];
 		bar->s[r] = 0;
 		if (br->bar != bar->idx || !br->sizefunc || (br->monitor == 'A' && bar->mon != selmon))
 			continue;
@@ -257,20 +259,11 @@ drawbarwin(Bar *bar)
 		}
 
 		if (br->drawfunc == draw_powerline) {
-
+			/* Check if the bar overlaps with another powerline or is at
+			 * the start or end of the bar, in which case we skip it. */
 			if (reducepowerline(bar, r)) {
 				bar->s[r] = 0;
 				continue;
-			}
-
-			/* If the powerline is at the start or end of the bar, then keep the powerline but
-			 * reduce the size by half. When drawn this will be made a solid block rather than
-			 * slashes or arrows. */
-			if (bar->p[r] == bar->borderpx)
-				barg.w = w = bar->s[r] = bar->s[r] / 2;
-			else if (bar->p[r] + bar->s[r] + bar->borderpx == bar->bw) {
-				bar->p[r] += bar->s[r] / 2 + bar->s[r] % 2;
-				barg.w = w = bar->s[r] = bar->s[r] / 2;
 			}
 		}
 
@@ -349,8 +342,8 @@ drawbarwin(Bar *bar)
 	}
 
 	/* Draw powerline separators */
-	for (r = 0; r < LENGTH(barrules); r++) {
-		br = &barrules[r];
+	for (r = 0; r < num_barrules; r++) {
+		br = &_cfg_barrules[r];
 		if (!bar->s[r] || br->drawfunc != draw_powerline)
 			continue;
 
@@ -681,6 +674,11 @@ teardownbars(Monitor *m)
 
 		if (systray && bar == systray->bar)
 			systray->bar = NULL;
+
+		free(bar->s);
+		free(bar->p);
+		free(bar->sscheme);
+		free(bar->escheme);
 		free(bar);
 	}
 
@@ -799,12 +797,14 @@ matchextbar(Bar *bar, Window win)
 	if (!XGetClassHint(dpy, win, &ch))
 		return 0;
 
+	char *name = NULL;
 	int matched = 0;
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
-	char name[256] = {0};
-	if (!gettextprop(win, netatom[NetWMName], name, sizeof name))
-		gettextprop(win, XA_WM_NAME, name, sizeof name);
+
+	if (!gettextprop(win, netatom[NetWMName], &name))
+		if (!gettextprop(win, XA_WM_NAME, &name))
+			name = strdup(broken);
 
 	if (enabled(Debug)) {
 		fprintf(stderr, "matchextbar: checking new window %s (%ld), class = '%s', instance = '%s'\n", name, win, class, instance);
@@ -832,6 +832,8 @@ matchextbar(Bar *bar, Window win)
 		XFree(ch.res_class);
 	if (ch.res_name)
 		XFree(ch.res_name);
+
+	free(name);
 
 	if (enabled(Debug)) {
 		fprintf(stderr, "matchextbar: window %ld %s a match for external bar %d monitor %d\n", win, matched ? "is" : "is not", def->idx, def->monitor);
