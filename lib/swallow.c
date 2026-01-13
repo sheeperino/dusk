@@ -251,7 +251,7 @@ getparentprocess(pid_t p)
 	if (!(f = fopen(buf, "r")))
 		return (pid_t)0;
 
-	if (fscanf(f, "%*u %*s %*c %u", (unsigned *)&v) != 1)
+	if (fscanf(f, "%*u (%*[^)]) %*c %u", (unsigned *)&v) != 1)
 		v = (pid_t)0;
 	fclose(f);
 #endif /* __linux__ */
