@@ -277,7 +277,7 @@ isdescprocess(pid_t p, pid_t c)
 	while (p != c && c != 0) {
 		p_tmp = getparentprocess(c);
 		if (istmuxserver(p_tmp))
-			c = getparentprocess(gettmuxclientpid(c));
+			c = gettmuxclientpid(c);
 		else
 			c = p_tmp;
 	}
@@ -296,7 +296,6 @@ istmuxserver(pid_t p)
 		return 0;
 	fscanf(stat, "%*u (%12[^)])", name);
 	fclose(stat);
-	printf("tmux name = %s (%u)\n", name, (unsigned)p);
 	return (strcmp(name, "tmux: server") == 0);
 }
 
